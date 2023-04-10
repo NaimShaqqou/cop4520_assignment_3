@@ -3,12 +3,15 @@
 #include <vector>
 #include <chrono>
 #include <random>
+#include <map>
 
 #define N 8
 #define MIN_TEMP -70
 #define MAX_TEMP 100
 
 using namespace std;
+
+map<mt19937, uniform_int_distribution<int>> sensors;
 
 /*
  * Assignment requirements
@@ -27,6 +30,18 @@ int main()
     for (int s = 0; s < N; s++)
     {
         mt19937 mt(rd());
+        uniform_int_distribution<int> unii(MIN_TEMP, MAX_TEMP);
+
+        sensors[mt] = unii;
+    }
+
+    std::map<std::string, int>::iterator it = sensors.begin();
+ 
+  // Iterate through the sensors and print the elements
+    while (it != sensors.end())
+    {
+        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+        ++it;
     }
     return 0;
 }
