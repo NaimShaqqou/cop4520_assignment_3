@@ -90,6 +90,8 @@ class LazyList
 
         bool remove(int tag)
         {
+            bool ret = false;
+
             while (true)
             {
                 node *prev = head;
@@ -102,37 +104,39 @@ class LazyList
                 }
 
                 // reached the end of the list
-                if (cur->tag == numeric_limits<int>::max())
-                    return false;
+                // if (cur->tag == numeric_limits<int>::max())
+                //     return false;
 
-                if (prev->curNode.try_lock() && cur->curNode.try_lock())
+                prev->curNode.lock();
+                cur->curNode.lock();
+
+                if (validate(prev, cur))
                 {
-                    if (validate(prev, cur))
+                    if (cur->tag == tag)
                     {
-                        if (cur->tag == tag)
-                        {
-                            // mark node as deleted
-                            cur->marked = true;
+                        // mark node as deleted
+                        cur->marked = true;
 
-                            // actually delete the node
-                            prev->next = cur->next;
+                        // actually delete the node
+                        prev->next = cur->next;
 
-                            // unlcok both pred and cur nodes
-                            prev->curNode.unlock();
-                            cur->curNode.unlock();
-                            delete cur;
-                            return true;
-                        }
-                        else
-                        {
-                            // unlcok both pred and cur nodes
-                            prev->curNode.unlock();
-                            cur->curNode.unlock();
+                        // unlcok both pred and cur nodes
+                        cur->curNode.unlock();
 
-                            return false;
-                        }
+                        ret = true;
                     }
+                    else
+                    {
+                        // unlcok both pred and cur nodes
+                        cur->curNode.unlock();
+
+                        ret = false;
+                    }
+
+                    prev->curNode.unlock();
+                    return ret;
                 }
+                
 
                 // unlcok both pred and cur nodes
                 prev->curNode.unlock();

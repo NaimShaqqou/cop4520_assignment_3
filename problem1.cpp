@@ -45,9 +45,6 @@ int main()
                 if (remPos >= addPos) continue;
 
                 int tag = arr[remPos++];
-                
-                while (!linkedList.contains(tag))
-                    continue;
 
                 linkedList.remove(tag);
                 
@@ -63,11 +60,6 @@ int main()
 
                 int tag = arr[addPos++];
 
-                if (!linkedList.contains(tag))
-                    linkedList.add(tag);
-
-                counter++;
-
                 // remove gift from linked list in next iteration
                 op ^= 1;
                 continue;
@@ -81,14 +73,7 @@ int main()
     // whether everyone has seen the cupcake
     for (int i = 0; i < N; i++)
         threads.emplace_back(servant, i);
-
-    // for(int i = 10; i <= NumGifts; i += 10) {
-    //     while(counter < i);
-    //     cout << ((i * 100) / NumGifts) << "%" << endl;
-    //     linkedList.print();
-    //     cout << "addPos = " << addPos << ", remPos = " << remPos << "\n";
-    // }
-
+        
     for (int i = 0; i < N; i++)
         threads[i].join();
 
