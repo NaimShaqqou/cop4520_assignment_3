@@ -6,12 +6,12 @@
 atomic<int> addPos{0};
 atomic<int> remPos{0};
 
-atomic <int> counter;
+atomic<int> counter;
 
 int main()
 {
 
-    srand((unsigned) time(NULL));
+    srand((unsigned)time(NULL));
 
     // randomly ordrered array that contains the gifts
     vector<int> arr(NumGifts);
@@ -42,12 +42,13 @@ int main()
             if (op == 1)
             {
                 // can't remove gifts we haven't added yet
-                if (remPos == addPos) continue;
+                if (remPos == addPos)
+                    continue;
 
                 int tag = arr[remPos++];
 
                 linkedList.remove(tag);
-                
+
                 // add gift to linkedlist in next iteration
                 op ^= 1;
                 continue;
@@ -57,7 +58,8 @@ int main()
             if (op == 0)
             {
                 // we added all the gifts to the linked list
-                if (addPos == NumGifts) continue;
+                if (addPos == NumGifts)
+                    continue;
 
                 int tag = arr[addPos++];
 
@@ -72,8 +74,6 @@ int main()
 
     auto start = chrono::high_resolution_clock::now();
 
-    // the first guest is the one that can decide
-    // whether everyone has seen the cupcake
     for (int i = 0; i < N; i++)
         threads.emplace_back(servant, i);
 
