@@ -1,5 +1,13 @@
 #include "LazyList.h"
 
+#define N 4
+#define NumGifts 200
+
+atomic<int> addPos;
+atomic<int> remPos;
+
+atomic <int> counter;
+
 int main()
 {
 
@@ -50,6 +58,7 @@ int main()
 
                 int tag = arr[addPos++];
                 linkedList.add(tag);
+                counter++;
 
                 // remove gift from linked list in next iteration
                 op ^= 1;
@@ -63,6 +72,11 @@ int main()
     // whether everyone has seen the cupcake
     for (int i = 0; i < N; i++)
         threads.emplace_back(servant, i);
+
+    for(int i = 5; i <= NumGifts; i += 5) {
+        while(counter < i);
+        cout << ((i * 100) / NumGifts) << "%" << endl;
+    }
 
     for (int i = 0; i < N; i++)
         threads[i].join();

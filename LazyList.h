@@ -6,12 +6,6 @@
 
 using namespace std;
 
-#define N 4
-#define NumGifts 10
-
-atomic<int> addPos;
-atomic<int> remPos;
-
 struct node 
 {
     // the mutex is to lock the current node
@@ -58,25 +52,25 @@ class LazyList
                     cur = cur->next;
                 }
 
-                prev->curNode.lock();
-                cur->curNode.lock();
-
-                if (validate(prev, cur))
+                if (prev->curNode.try_lock() && cur->curNode.try_lock())
                 {
-                    if (cur->tag == tag)
+                    if (validate(prev, cur))
                     {
+                        if (cur->tag == tag)
+                        {
+                            prev->curNode.unlock();
+                            cur->curNode.unlock();
+                            return false;
+                        }
+
+                        node *newNode = new node(tag);
+                        newNode->next = cur;
+                        prev->next = newNode;
+
                         prev->curNode.unlock();
                         cur->curNode.unlock();
-                        return false;
+                        return true;
                     }
-
-                    node *newNode = new node(tag);
-                    newNode->next = cur;
-                    prev->next = newNode;
-
-                    prev->curNode.unlock();
-                    cur->curNode.unlock();
-                    return true;
                 }
             }
         }
@@ -98,32 +92,32 @@ class LazyList
                         return false;
                 }
 
-                prev->curNode.lock();
-                cur->curNode.lock();
-
-                if (validate(prev, cur))
+                if (prev->curNode.try_lock() && cur->curNode.try_lock())
                 {
-                    if (cur->tag == tag)
+                    if (validate(prev, cur))
                     {
-                        // mark node as deleted
-                        cur->marked = true;
+                        if (cur->tag == tag)
+                        {
+                            // mark node as deleted
+                            cur->marked = true;
 
-                        // actually delete the node
-                        prev->next = cur->next;
+                            // actually delete the node
+                            prev->next = cur->next;
 
-                        // unlcok both pred and cur nodes
-                        prev->curNode.unlock();
-                        cur->curNode.unlock();
+                            // unlcok both pred and cur nodes
+                            prev->curNode.unlock();
+                            cur->curNode.unlock();
 
-                        return true;
-                    }
-                    else
-                    {
-                        // unlcok both pred and cur nodes
-                        prev->curNode.unlock();
-                        cur->curNode.unlock();
+                            return true;
+                        }
+                        else
+                        {
+                            // unlcok both pred and cur nodes
+                            prev->curNode.unlock();
+                            cur->curNode.unlock();
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }
