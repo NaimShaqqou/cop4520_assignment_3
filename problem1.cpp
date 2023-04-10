@@ -1,10 +1,10 @@
 #include "LazyList.h"
 
 #define N 4
-#define NumGifts 200
+#define NumGifts 50
 
-atomic<int> addPos;
-atomic<int> remPos;
+atomic<int> addPos{0};
+atomic<int> remPos{0};
 
 atomic <int> counter;
 
@@ -39,29 +39,38 @@ int main()
         while (remPos < NumGifts)
         {
             // write thank you note and remove
-            if (op)
+            if (op == 1)
             {
                 // can't remove gifts we haven't added yet
                 if (remPos >= addPos) continue;
 
                 int tag = arr[remPos++];
-                linkedList.remove(tag);
+                
+                while (!linkedList.contains(tag))
+                    continue;
 
+                linkedList.remove(tag);
+                
                 // add gift to linkedlist in next iteration
                 op ^= 1;
+                continue;
             }
             // add
-            else
+            if (op == 1)
             {
                 // we added all the gifts to the linked list
                 if (addPos >= NumGifts) continue;
 
                 int tag = arr[addPos++];
-                linkedList.add(tag);
+
+                if (!linkedList.contains(tag))
+                    linkedList.add(tag);
+
                 counter++;
 
                 // remove gift from linked list in next iteration
                 op ^= 1;
+                continue;
             }
         }
     };
@@ -73,10 +82,12 @@ int main()
     for (int i = 0; i < N; i++)
         threads.emplace_back(servant, i);
 
-    for(int i = 5; i <= NumGifts; i += 5) {
-        while(counter < i);
-        cout << ((i * 100) / NumGifts) << "%" << endl;
-    }
+    // for(int i = 10; i <= NumGifts; i += 10) {
+    //     while(counter < i);
+    //     cout << ((i * 100) / NumGifts) << "%" << endl;
+    //     linkedList.print();
+    //     cout << "addPos = " << addPos << ", remPos = " << remPos << "\n";
+    // }
 
     for (int i = 0; i < N; i++)
         threads[i].join();

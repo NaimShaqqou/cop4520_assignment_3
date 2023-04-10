@@ -13,10 +13,10 @@ struct node
     int tag;
 
     // node gets marked when it's deleted
-    bool marked = false;
+    bool marked;
     node *next;
 
-    node(int tag): tag(tag) {}
+    node(int tag, node *next = nullptr, bool marked = false): tag(tag), next(next), marked(marked) {}
 };
 
 class LazyList 
@@ -33,6 +33,12 @@ class LazyList
             head->next = new node(numeric_limits<int>::max());
         }
 
+        ~LazyList()
+        {
+            if (head) delete head;
+            if (head->next) delete head->next;
+        }
+
         
         bool validate(node *prev, node *cur)
         {
@@ -41,6 +47,7 @@ class LazyList
 
         bool add(int tag)
         {
+            bool ret = false;
             while (true)
             {
                 // traverse to the place where we want to add the node
@@ -52,26 +59,32 @@ class LazyList
                     cur = cur->next;
                 }
 
-                if (prev->curNode.try_lock() && cur->curNode.try_lock())
-                {
-                    if (validate(prev, cur))
-                    {
-                        if (cur->tag == tag)
-                        {
-                            prev->curNode.unlock();
-                            cur->curNode.unlock();
-                            return false;
-                        }
+                prev->curNode.lock();
+                cur->curNode.lock();
 
+                if (validate(prev, cur))
+                {
+                    if (cur->tag == tag)
+                    {
+                        ret = false;
+                    }
+                    else
+                    {
                         node *newNode = new node(tag);
                         newNode->next = cur;
                         prev->next = newNode;
 
-                        prev->curNode.unlock();
-                        cur->curNode.unlock();
-                        return true;
+                        ret = true;
                     }
+
+                    prev->curNode.unlock();
+                    cur->curNode.unlock();
+
+                    return ret;
                 }
+
+                prev->curNode.unlock();
+                cur->curNode.unlock();
             }
         }
 
@@ -86,11 +99,11 @@ class LazyList
                 {
                     prev = cur;
                     cur = cur->next;
-
-                    // reached the end of the list
-                    if (cur->tag == numeric_limits<int>::max())
-                        return false;
                 }
+
+                // reached the end of the list
+                if (cur->tag == numeric_limits<int>::max())
+                    return false;
 
                 if (prev->curNode.try_lock() && cur->curNode.try_lock())
                 {
@@ -107,7 +120,7 @@ class LazyList
                             // unlcok both pred and cur nodes
                             prev->curNode.unlock();
                             cur->curNode.unlock();
-
+                            delete cur;
                             return true;
                         }
                         else
@@ -120,6 +133,10 @@ class LazyList
                         }
                     }
                 }
+
+                // unlcok both pred and cur nodes
+                prev->curNode.unlock();
+                cur->curNode.unlock();
             }
         }
 
@@ -134,5 +151,15 @@ class LazyList
 
             // make sure the tags match and the node is not removed
             return cur->tag == tag && !cur->marked;
+        }
+
+        void print()
+        {
+            node *cur = head;
+            while (cur != nullptr)
+            {
+                cout << cur->tag << " => marked : " << cur->marked << endl;
+                cur = cur->next;
+            }
         }
 };
