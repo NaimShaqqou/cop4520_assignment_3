@@ -1,7 +1,7 @@
 #include "LazyList.h"
 
 #define N 4
-#define NumGifts 50
+#define NumGifts 500000
 
 atomic<int> addPos{0};
 atomic<int> remPos{0};
@@ -42,7 +42,7 @@ int main()
             if (op == 1)
             {
                 // can't remove gifts we haven't added yet
-                if (remPos >= addPos) continue;
+                if (remPos == addPos) continue;
 
                 int tag = arr[remPos++];
 
@@ -52,11 +52,12 @@ int main()
                 op ^= 1;
                 continue;
             }
+
             // add
-            if (op == 1)
+            if (op == 0)
             {
                 // we added all the gifts to the linked list
-                if (addPos >= NumGifts) continue;
+                if (addPos == NumGifts) continue;
 
                 int tag = arr[addPos++];
 
@@ -69,13 +70,21 @@ int main()
 
     vector<thread> threads;
 
+    auto start = chrono::high_resolution_clock::now();
+
     // the first guest is the one that can decide
     // whether everyone has seen the cupcake
     for (int i = 0; i < N; i++)
         threads.emplace_back(servant, i);
-        
+
     for (int i = 0; i < N; i++)
         threads[i].join();
+
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+
+    cout << "All " << NumGifts << " thank you notes have been sent out.\n";
+    cout << "Runtime: " << duration.count() / 1e+3 << " seconds" << endl;
 
     return 0;
 }
